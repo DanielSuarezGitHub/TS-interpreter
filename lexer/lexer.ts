@@ -3,9 +3,9 @@ const code = `
 func sum(x, y) { return x + y }
 func multiply(x, y) { return x * y }
 
-var a = 5
-var b = 10
-var c = sum(a, b)
+var a = 5;
+var b = 10;
+var c = sum(a, b);
 
 if c > 10 {
     var result = multiply(c, 2)
@@ -14,53 +14,54 @@ if c > 10 {
 }
 
 var i = 0
-while i < 5 {
+while (i < 5) {
     result = result + i
     i = i + 1
 }
 `;
 
 enum TokenType {
-  Keyword, // IMPLEMENTED
-  Identifier, // IMPLEMENTED
-  Number, // IMPLEMENTED
-  Operator, // IMPLEMENTED
-  Punctuation, // IMPLEMENTED
-  Assignment, // IMPLEMENTED
-  Comparison, // IMPLEMENTED
-  Bracket, // IMPLEMENTED
-  Whitespace, // Handled but not needed
-  EndOfFile, // IMPLEMENTED
-}
-
-interface Token {
-  type: TokenType;
-  value: string;
-}
-
-const keywords = ["func", "var", "if", "else", "while", "return"];
-
-function isWhiteSpace(char: string): boolean {
-  return char === " " || char === "\n" || char === "\t";
-}
-
-function isAlpha(char: string): boolean {
-  return /[a-zA-Z]/.test(char);
-}
-
-function isDigit(char: string): boolean {
-  return /[0-9]/.test(char);
-}
-
-function isAlphaNumeric(char: string): boolean {
-  return isAlpha(char) || isDigit(char);
-}
-
-function isOperator(char: string): boolean {
+    Keyword,
+    Identifier,
+    Number,
+    Operator,
+    Punctuation,
+    Assignment,
+    Comparison,
+    Bracket,
+    String,
+    Whitespace, // Handled but not tokenized
+    EndOfFile,
+  }
+  
+  interface Token {
+    type: TokenType;
+    value: string;
+  }
+  
+  const keywords = ["func", "var", "if", "else", "while", "return"];
+  
+  function isWhiteSpace(char: string): boolean {
+    return char === " " || char === "\n" || char === "\t";
+  }
+  
+  function isAlpha(char: string): boolean {
+    return /[a-zA-Z]/.test(char);
+  }
+  
+  function isDigit(char: string): boolean {
+    return /[0-9]/.test(char);
+  }
+  
+  function isAlphaNumeric(char: string): boolean {
+    return isAlpha(char) || isDigit(char);
+  }
+  
+  function isOperator(char: string): boolean {
     return /[+\-*/]/.test(char);
-}
-
-function tokenize(code: string): Token[] {
+  }
+  
+  function tokenize(code: string): Token[] {
     let tokens: Token[] = [];
     let text: string[] = code.split("");
   
@@ -82,12 +83,10 @@ function tokenize(code: string): Token[] {
         while (text.length > 0 && isAlphaNumeric(text[0])) {
           word += text.shift();
         }
-  
-        if (keywords.includes(word)) {
-          tokens.push({ type: TokenType.Keyword, value: word });
-        } else {
-          tokens.push({ type: TokenType.Identifier, value: word });
-        }
+        tokens.push({
+          type: keywords.includes(word) ? TokenType.Keyword : TokenType.Identifier,
+          value: word,
+        });
         continue;
       }
   
@@ -99,33 +98,44 @@ function tokenize(code: string): Token[] {
         tokens.push({ type: TokenType.Number, value: num });
         continue;
       }
-
+  
       if (char === "(" || char === ")") {
         tokens.push({ type: TokenType.Bracket, value: char });
+        continue;
       }
-
-      if (char === "{" || char === "}") {
-        tokens.push({ type: TokenType.Punctuation, value: char });
-      }
-
-      if (char === '>' || char === '<' || char === '==') {
-        tokens.push({ type: TokenType.Comparison, value: char });
-      }
-
-      if (char === '=') {
-        tokens.push({ type: TokenType.Assignment, value: char });
-      }
-
-
-    }
-    if (text.length === 0) {
-      tokens.push({ type: TokenType.EndOfFile, value: "" });
-    }
-
-
   
+      if (char === "{" || char === "}" || char === ";" || char === ",") {
+        tokens.push({ type: TokenType.Punctuation, value: char });
+        continue;
+      }
+  
+      if (char === ">" || char === "<" || (char === "=" && text[0] === "=")) {
+        let value = char;
+        if (text[0] === "=") value += text.shift();
+        tokens.push({ type: TokenType.Comparison, value });
+        continue;
+      }
+  
+      if (char === "=") {
+        tokens.push({ type: TokenType.Assignment, value: char });
+        continue;
+      }
+  
+      if (char === '"' || char === "'") {
+        let quoteType = char;
+        let str = "";
+        while (text.length > 0 && text[0] !== quoteType) {
+          str += text.shift();
+        }
+        text.shift(); // Consume closing quote
+        tokens.push({ type: TokenType.String, value: str });
+        continue;
+      }
+    }
+  
+    tokens.push({ type: TokenType.EndOfFile, value: "" });
     return tokens;
   }
   
-
-export { code, tokenize, Token, TokenType };
+  export { tokenize, Token, TokenType, code };
+  
